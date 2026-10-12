@@ -21,10 +21,6 @@
         <div class="container">
             <h1>Flow Admin</h1>
             <p class="tagline">Construction Mode</p>
-            <nav>
-                <a href="index.html">Accueil</a>
-                <a href="flow.html" class="active">Flow</a>
-            </nav>
         </div>
     </header>
 
@@ -130,6 +126,7 @@
         }
 
         function loadCurrent() {
+            // Load existing or defaults
             const zach = localStorage.getItem('site_zachary') || '';
             const trisha = localStorage.getItem('site_trisha') || '';
             document.getElementById('zachary-preview').src = zach || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><text x="50%" y="50%" text-anchor="middle">Zachary</text></svg>';
@@ -138,6 +135,7 @@
             if (vid) document.getElementById('video-preview').src = vid;
         }
 
+        // Basket placeholders
         const baskets = ['Mini', 'Classique', 'Poutine', 'Gourmet', 'Familial'];
         const container = document.getElementById('basket-uploads');
         baskets.forEach(b => {
