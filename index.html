@@ -32,6 +32,14 @@
         </div>
     </section>
 
+    <section class="video-section" style="padding:40px 0; text-align:center; background:#f9f5f0;">
+        <div class="container">
+            <h2 data-fr="Fabrication du Fromage Québécois" data-en="Quebec Cheese Manufacturing">Fabrication du Fromage Québécois</h2>
+            <video id="main-video" controls autoplay muted loop style="max-width:100%; border-radius:12px; margin-top:20px;" src="cheese-manufacturing.mp4"></video>
+            <p data-fr="15 secondes — de la cuve à la table de variétés Bergeron & St-Guillaume" data-en="15 seconds — from the vat to the Bergeron & St-Guillaume variety table">15 secondes — de la cuve à la table de variétés Bergeron & St-Guillaume</p>
+        </div>
+    </section>
+
     <section id="about" class="about">
         <div class="container">
             <h2 data-fr="Nos Fromages" data-en="Our Cheeses">Nos Fromages</h2>
@@ -84,5 +92,20 @@
     </div>
 
     <script src="script.js"></script>
+<script>
+// Flow overrides
+document.addEventListener('DOMContentLoaded', () => {
+    const zach = localStorage.getItem('site_zachary');
+    if (zach) {
+        const img = document.querySelector('.spokesperson.zachary');
+        if (img) img.src = zach;
+    }
+    const vid = localStorage.getItem('site_video');
+    if (vid) {
+        const v = document.getElementById('main-video');
+        if (v) v.src = vid;
+    }
+});
+</script>
 </body>
 </html>
