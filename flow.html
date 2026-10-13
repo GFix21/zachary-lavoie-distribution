@@ -104,22 +104,43 @@
         function previewVideo(input) {
             const file = input.files[0];
             if (!file) return;
+            if (file.size > 8 * 1024 * 1024) {
+                alert('Vidéo trop grande (max ~8 Mo). Compressez-la d\'abord.');
+                return;
+            }
             const reader = new FileReader();
             reader.onload = e => {
                 const dataUri = e.target.result;
                 document.getElementById('video-preview').src = dataUri;
-                localStorage.setItem('preview_video', dataUri);
+                // Store in IndexedDB for larger size support
+                const req = indexedDB.open('zacharySite', 1);
+                req.onupgradeneeded = e => e.target.result.createObjectStore('videos');
+                req.onsuccess = e => {
+                    const db = e.target.result;
+                    const tx = db.transaction('videos', 'readwrite');
+                    tx.objectStore('videos').put(dataUri, 'preview');
+                };
             };
             reader.readAsDataURL(file);
         }
         function applyVideo() {
             const src = document.getElementById('video-preview').src;
-            if (src && src.startsWith('data:')) {
-                localStorage.setItem('site_video', src);
-                alert('Vidéo appliquée ! Rafraîchissez la page principale.');
-            } else {
+            if (!src || !src.startsWith('data:')) {
                 alert("Uploadez d'abord une vidéo.");
+                return;
             }
+            // Save to IndexedDB and also try localStorage as fallback
+            const req = indexedDB.open('zacharySite', 1);
+            req.onupgradeneeded = e => e.target.result.createObjectStore('videos');
+            req.onsuccess = e => {
+                const db = e.target.result;
+                const tx = db.transaction('videos', 'readwrite');
+                tx.objectStore('videos').put(src, 'site_video');
+                tx.oncomplete = () => {
+                    try { localStorage.setItem('site_video', src); } catch(e) {}
+                    alert('Vidéo appliquée ! Rafraîchissez la page principale.');
+                };
+            };
         }
 
         function checkPassword() {

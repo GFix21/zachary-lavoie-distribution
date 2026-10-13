@@ -90,18 +90,35 @@
     <script src="script.js"></script>
 
 <script>
-// Flow overrides
+// Flow overrides (supports IndexedDB for video)
 document.addEventListener('DOMContentLoaded', () => {
     const zach = localStorage.getItem('site_zachary');
     if (zach) {
         const img = document.querySelector('.spokesperson.zachary');
         if (img) img.src = zach;
     }
-    const vid = localStorage.getItem('site_video');
-    if (vid) {
-        const v = document.getElementById('main-video');
-        if (v) v.src = vid;
-    }
+    // Try IndexedDB first for video, fallback to localStorage
+    const req = indexedDB.open('zacharySite', 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore('videos');
+    req.onsuccess = e => {
+        const db = e.target.result;
+        const tx = db.transaction('videos', 'readonly');
+        const get = tx.objectStore('videos').get('site_video');
+        get.onsuccess = () => {
+            const vid = get.result || localStorage.getItem('site_video');
+            if (vid) {
+                const v = document.getElementById('main-video');
+                if (v) v.src = vid;
+            }
+        };
+    };
+    req.onerror = () => {
+        const vid = localStorage.getItem('site_video');
+        if (vid) {
+            const v = document.getElementById('main-video');
+            if (v) v.src = vid;
+        }
+    };
 });
 </script>
 
