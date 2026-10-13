@@ -90,35 +90,39 @@
     <script src="script.js"></script>
 
 <script>
-// Flow overrides (supports IndexedDB for video)
-document.addEventListener('DOMContentLoaded', () => {
-    const zach = localStorage.getItem('site_zachary');
+// Flow overrides (IndexedDB preferred)
+document.addEventListener('DOMContentLoaded', async () => {
+    async function loadFromDB(store, key) {
+        try {
+            const db = await new Promise((res, rej) => {
+                const r = indexedDB.open('zacharySite', 2);
+                r.onupgradeneeded = e => {
+                    const d = e.target.result;
+                    if (!d.objectStoreNames.contains('images')) d.createObjectStore('images');
+                    if (!d.objectStoreNames.contains('videos')) d.createObjectStore('videos');
+                };
+                r.onsuccess = e => res(e.target.result);
+                r.onerror = rej;
+            });
+            const tx = db.transaction(store, 'readonly');
+            const get = tx.objectStore(store).get(key);
+            return await new Promise((res, rej) => { get.onsuccess = () => res(get.result); get.onerror = rej; });
+        } catch (e) { return null; }
+    }
+
+    // Zachary image
+    const zach = await loadFromDB('images', 'site_zachary') || localStorage.getItem('site_zachary');
     if (zach) {
         const img = document.querySelector('.spokesperson.zachary');
         if (img) img.src = zach;
     }
-    // Try IndexedDB first for video, fallback to localStorage
-    const req = indexedDB.open('zacharySite', 1);
-    req.onupgradeneeded = e => e.target.result.createObjectStore('videos');
-    req.onsuccess = e => {
-        const db = e.target.result;
-        const tx = db.transaction('videos', 'readonly');
-        const get = tx.objectStore('videos').get('site_video');
-        get.onsuccess = () => {
-            const vid = get.result || localStorage.getItem('site_video');
-            if (vid) {
-                const v = document.getElementById('main-video');
-                if (v) v.src = vid;
-            }
-        };
-    };
-    req.onerror = () => {
-        const vid = localStorage.getItem('site_video');
-        if (vid) {
-            const v = document.getElementById('main-video');
-            if (v) v.src = vid;
-        }
-    };
+
+    // Video
+    const vid = await loadFromDB('videos', 'site_video') || localStorage.getItem('site_video');
+    if (vid) {
+        const v = document.getElementById('main-video');
+        if (v) v.src = vid;
+    }
 });
 </script>
 

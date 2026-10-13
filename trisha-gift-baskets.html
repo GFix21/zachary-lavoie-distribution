@@ -164,25 +164,42 @@
     <script src="script.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const trisha = localStorage.getItem('site_trisha');
+// Flow overrides for Trisha page (IndexedDB preferred)
+document.addEventListener('DOMContentLoaded', async () => {
+    async function loadFromDB(key) {
+        try {
+            const db = await new Promise((res, rej) => {
+                const r = indexedDB.open('zacharySite', 2);
+                r.onupgradeneeded = e => {
+                    const d = e.target.result;
+                    if (!d.objectStoreNames.contains('images')) d.createObjectStore('images');
+                    if (!d.objectStoreNames.contains('videos')) d.createObjectStore('videos');
+                };
+                r.onsuccess = e => res(e.target.result);
+                r.onerror = rej;
+            });
+            const tx = db.transaction('images', 'readonly');
+            const get = tx.objectStore('images').get(key);
+            return await new Promise((res, rej) => { get.onsuccess = () => res(get.result); get.onerror = rej; });
+        } catch (e) { return null; }
+    }
+
+    // Trisha image
+    const trisha = await loadFromDB('site_trisha') || localStorage.getItem('site_trisha');
     if (trisha) {
         const img = document.querySelector('.spokesperson.trisha');
         if (img) img.src = trisha;
     }
-    // Baskets
-    ['mini','classic','poutine','gourmet','family'].forEach(k => {
-        const data = localStorage.getItem('site_' + k);
-        if (data) {
-            const cards = document.querySelectorAll('.basket-card');
-            cards.forEach(card => {
-                if (card.dataset.id && card.dataset.id.includes(k)) {
-                    const img = card.querySelector('img');
-                    if (img) img.src = data;
-                }
-            });
+
+    // Basket images
+    const baskets = ['mini', 'classic', 'poutine', 'gourmet', 'family'];
+    for (const k of baskets) {
+        const src = await loadFromDB('site_' + k) || localStorage.getItem('site_' + k);
+        if (src) {
+            const img = document.querySelector('img[data-basket="' + k + '"], img.basket-' + k);
+            if (img) img.src = src;
         }
-    });
+    }
 });
 </script>
 
