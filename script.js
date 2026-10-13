@@ -137,3 +137,33 @@ document.getElementById('contact-form')?.addEventListener('submit', (e) => {
 
 // Initial cart update
 updateCart();
+
+
+// Image language switching
+function switchImageLanguage(lang) {
+    document.querySelectorAll('[data-src-fr], [data-src-en]').forEach(img => {
+        const fr = img.getAttribute('data-src-fr');
+        const en = img.getAttribute('data-src-en');
+        if (lang === 'en' && en) {
+            img.src = en;
+        } else if (fr) {
+            img.src = fr;
+        }
+    });
+}
+
+// Hook into existing language toggle
+const originalToggle = document.getElementById('lang-toggle');
+if (originalToggle) {
+    originalToggle.addEventListener('click', () => {
+        const isEN = document.documentElement.lang === 'en' || document.body.classList.contains('lang-en');
+        const newLang = isEN ? 'fr' : 'en';
+        switchImageLanguage(newLang);
+    });
+}
+
+// Also run on load
+document.addEventListener('DOMContentLoaded', () => {
+    const current = document.documentElement.lang || 'fr';
+    switchImageLanguage(current);
+});
